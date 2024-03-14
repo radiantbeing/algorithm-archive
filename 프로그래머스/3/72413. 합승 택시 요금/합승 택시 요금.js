@@ -1,7 +1,10 @@
 function solution(n, s, a, b, fares) {
-    const graph = Array.from({ length: n + 1 }, () => Array(n + 1).fill(Infinity));
+    const graph = Array.from(
+        { length: n + 1 }, 
+        () => Array(n + 1).fill(Infinity)
+    );
     
-    for (let i = 0; i < n + 1; i++) {
+    for (let i = 1; i < n + 1; i++) {
         graph[i][i] = 0;
     }
     

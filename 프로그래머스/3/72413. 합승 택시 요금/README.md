@@ -1,10 +1,10 @@
 # [level 3] 합승 택시 요금 - 72413 
 
-[문제 링크](https://school.programmers.co.kr/learn/courses/30/lessons/72413) 
+[문제 링크](https://school.programmers.co.kr/learn/courses/30/lessons/72413?language=javascript) 
 
 ### 성능 요약
 
-메모리: 37.9 MB, 시간: 13.27 ms
+메모리: 37.9 MB, 시간: 12.05 ms
 
 ### 구분
 
@@ -16,7 +16,7 @@
 
 ### 제출 일자
 
-2024년 03월 14일 17:08:01
+2024년 03월 14일 17:11:12
 
 ### 문제 설명
 
