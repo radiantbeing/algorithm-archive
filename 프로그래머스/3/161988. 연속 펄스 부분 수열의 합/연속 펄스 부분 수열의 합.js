@@ -15,6 +15,4 @@ function solution(sequence) {
     }
     
     return Math.abs(maxPrefixSum - minPrefixSum);
-    
-    console.log(prefixSum);
 }
