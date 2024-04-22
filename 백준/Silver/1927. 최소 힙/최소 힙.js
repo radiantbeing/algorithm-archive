@@ -20,63 +20,72 @@ class LineReader {
 class MinHeap {
   #heap = [null];
 
-  size() {
-    return this.#heap.length - 1;
+  peek() {
+      return this.#heap[1];
   }
-
+  
   insert(value) {
-    const heap = this.#heap;
-    heap.push(value);
-    this.percolateUp();
+      const heap = this.#heap;
+      heap.push(value);
+      this.percolateUp();
   }
 
   shift() {
-    const heap = this.#heap;
-    if (this.size() === 0) return undefined;
+      const heap = this.#heap;
+      const value = this.#heap[1];
+      const size = this.size();
+      if (size === 0)
+          return;
+      if (size === 1)
+          return heap.pop();
 
-    const value = heap[1];
-    if (this.size() === 1) {
-        return heap.pop();
-    }
+      heap[1] = heap.pop();
+      this.percolateDown();
 
-    heap[1] = heap.pop();
-    this.percolateDown();
-
-    return value;
-  } 
-
-  percolateUp() {
-    const heap = this.#heap;
-    const size = this.size();
-    const item = heap[size];
-    let pos = size;
-
-    while (pos > 1) {
-      const parent = heap[pos / 2 | 0];
-      if (item >= parent)
-        break;
-      heap[pos] = parent;
-      pos = pos / 2 | 0;
-    }
-    heap[pos] = item;
+      return value;
   }
 
-  percolateDown() {
-    const heap = this.#heap;
-    let pos = 1;
-    let item = heap[pos];
-    let childIndex;
+  percolateUp() {
+      const heap = this.#heap;
+      const size = this.size();
+      const item = heap[size];
+      let pos = size;
 
-    while (pos * 2 <= this.size()) {
-        childIndex = pos * 2; // 왼쪽 자식
-        if (childIndex < this.size() && heap[childIndex + 1] < heap[childIndex]) {
-            childIndex++; // 오른쪽 자식이 더 작으면 오른쪽 자식 선택
-        }
-        if (heap[childIndex] >= item) break;
-        heap[pos] = heap[childIndex];
-        pos = childIndex;
-    }
-    heap[pos] = item;
+      while (pos > 1) {
+          const parent = heap[pos / 2 | 0];
+          if (parent <= item)
+              break;
+          heap[pos] = parent;
+          pos = pos / 2 | 0;
+      }
+      heap[pos] = item;
+  }
+  
+  percolateDown() {
+      const heap = this.#heap;
+      const size = this.size();
+      const item = heap[1];
+      let pos = 1;
+
+      while (pos * 2 <= size) {
+          let childIndex = pos * 2 + 1;
+          if (childIndex > size || heap[pos * 2] < heap[childIndex])
+              childIndex = pos * 2;
+          const child = heap[childIndex];
+          if (item <= child)
+              break;
+          heap[pos] = child;
+          pos = childIndex;
+      }
+      heap[pos] = item;
+  }
+  
+  size() {
+      return this.#heap.length - 1;
+  }
+
+  heap() {
+      return this.#heap;
   }
 }
 
