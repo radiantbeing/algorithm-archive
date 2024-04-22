@@ -24,43 +24,27 @@ const ls = new LineScanner();
 const solve = () => {
   const [N, M] = ls.readIntArray();
 
-  const peopleMap = new Map();
-
+  const tempSet = new Set();
+  const answerSet = new Set();
+  
   for (let i = 0; i < N; i++) {
     const person = ls.read();
-    peopleMap.set(person, {
-      isHeard: true,
-      isSeen: false,
-    });
+    tempSet.add(person);
   }
 
   for (let i = 0; i < M; i++) {
     const person = ls.read();
-    if (peopleMap.get(person) === undefined) {
-      peopleMap.set(person, {
-        isHeard: false,
-        isSeen: true,
-      });
+    if (tempSet.has(person)) {
+      answerSet.add(person);
     }
-    peopleMap.set(person, {
-      ...peopleMap.get(person),
-      isSeen: true,
-    });
   }
 
-  const peopleEntries = peopleMap.entries();
-  const peopleArray = Array.from(peopleEntries);
-  
-  const peopleWhoHeardAndSeen = peopleArray
-    .filter(([_, { isHeard, isSeen }]) => isHeard && isSeen)
-    .map(([name, _]) => name);
-
-  peopleWhoHeardAndSeen.sort();
+  const answerArray = Array.from(answerSet);
+  answerArray.sort();
 
   let answer = "";
-
-  answer += `${peopleWhoHeardAndSeen.length}\n`;
-  answer += peopleWhoHeardAndSeen.join("\n");
+  answer += `${answerSet.size}\n`;
+  answer += answerArray.join("\n");
 
   return answer;
 };
