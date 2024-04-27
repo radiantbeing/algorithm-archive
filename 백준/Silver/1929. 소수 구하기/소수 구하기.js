@@ -13,7 +13,7 @@ const solve = () => {
   const sieve = Array(N + 1).fill(true);
   sieve[0] = sieve[1] = false;
 
-  for (let i = 2; i < N + 1; i++) {
+  for (let i = 2; i < parseInt(Math.sqrt(N)) + 1; i++) {
     for (let j = i * 2; j < N + 1; j += i) {
       sieve[j] = false;
     }
