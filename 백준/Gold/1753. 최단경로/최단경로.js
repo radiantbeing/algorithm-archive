@@ -27,9 +27,10 @@ class LineReader {
 }
 
 class PriorityQueue {
-  constructor() {
+  constructor(comparator) {
     this.heap = new Array(64);
     this.size = 0;
+    this.comparator = comparator;
   }
 
   push(value) {
@@ -46,6 +47,7 @@ class PriorityQueue {
   percolateUp() {
     const heap = this.heap;
     const size = this.size;
+    const comparator = this.comparator;
 
     let pos = size;
     const item = heap[pos];
@@ -53,7 +55,7 @@ class PriorityQueue {
     while (pos > 1) {
       const parent = heap[Math.floor(pos / 2)];
 
-      if (item[0] >= parent[0])
+      if (comparator(item, parent) >= 0)
         break;
 
       heap[pos] = parent;
@@ -80,16 +82,17 @@ class PriorityQueue {
   percolateDown() {
     const heap = this.heap;
     const size = this.size;
+    const comparator = this.comparator;
 
     let pos = 1;
     const item = heap[pos];
 
     while (pos * 2 <= size) {
       let childIndex = pos * 2 + 1;
-      if (childIndex > size || heap[pos * 2][0] < heap[childIndex][0])
+      if (childIndex > size || comparator(heap[pos * 2], heap[childIndex]) < 0)
         childIndex = pos * 2;
       const child = heap[childIndex];
-      if (item[0] <= child[0])
+      if (comparator(item, child) <= 0)
         break;
       heap[pos] = child;
       pos = childIndex;
@@ -109,7 +112,7 @@ const solve = () => {
   const visited = Array(V + 1).fill(false);
   const distance = Array(V + 1).fill(Infinity);
 
-  const pq = new PriorityQueue();
+  const pq = new PriorityQueue((a, b) => a[0] - b[0]);
 
   distance[K] = 0;
   pq.push([distance[K], K]);
