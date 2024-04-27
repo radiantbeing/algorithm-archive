@@ -1,140 +1,147 @@
-"use strict";
-
 const fs = require("fs");
-const path = process.platform === "linux" ? "/dev/stdin" : "input";
+
+class LineReader {
+  constructor() {
+    this.data = fs
+      .readFileSync(
+        process.platform === "linux" ? 0 : "input.txt",
+        "utf-8"
+      )
+      .toString()
+      .trimEnd()
+      .split("\n");
+    this.cursor = 0;
+  }
+
+  read() {
+    return this.data[this.cursor++];
+  }
+
+  readInt() {
+    return Number(this.read());
+  }
+
+  readIntArray() {
+    return this.read().split(" ").map(Number);
+  }
+}
 
 class PriorityQueue {
   constructor() {
-    this.heap = [];
+    this.heap = new Array(64);
+    this.size = 0;
   }
 
-  enqueue(element, priority) {
-    const node = { element, priority };
-    this.heap.push(node);
-    this.heapifyUp();
+  push(value) {
+    const heap = this.heap;
+    const size = ++this.size;
+    
+    if (size === heap.length)
+      heap.length *= 2;
+
+    heap[size] = value;
+    this.percolateUp();
   }
 
-  dequeue() {
-    if (this.isEmpty()) {
-      return null;
-    }
+  percolateUp() {
+    const heap = this.heap;
+    const size = this.size;
 
-    const root = this.heap[0];
-    const lastNode = this.heap.pop();
+    let pos = size;
+    const item = heap[pos];
 
-    if (this.heap.length > 0) {
-      this.heap[0] = lastNode;
-      this.heapifyDown();
-    }
+    while (pos > 1) {
+      const parent = heap[Math.floor(pos / 2)];
 
-    return root.element;
-  }
-
-  isEmpty() {
-    return this.heap.length === 0;
-  }
-
-  size() {
-    return this.heap.length;
-  }
-
-  heapifyUp() {
-    let index = this.heap.length - 1;
-
-    while (index > 0) {
-      const current = this.heap[index];
-      const parentIndex = Math.floor((index - 1) / 2);
-      const parent = this.heap[parentIndex];
-
-      if (current.priority < parent.priority) {
-        this.swap(index, parentIndex);
-        index = parentIndex;
-      } else {
+      if (item[0] >= parent[0])
         break;
-      }
+
+      heap[pos] = parent;
+      pos = Math.floor(pos / 2);
     }
+
+    heap[pos] = item;
   }
 
-  heapifyDown() {
-    let index = 0;
+  shift() {
+    const heap = this.heap;
+    const value = heap[1];
 
-    while (true) {
-      const leftChildIndex = 2 * index + 1;
-      const rightChildIndex = 2 * index + 2;
-      let smallest = index;
+    if (value === undefined)
+      return undefined;
 
-      if (
-        leftChildIndex < this.heap.length &&
-        this.heap[leftChildIndex].priority < this.heap[smallest].priority
-      ) {
-        smallest = leftChildIndex;
-      }
+    const size = --this.size;
+    heap[1] = heap[size + 1];
+    heap[size + 1] = undefined;
+    this.percolateDown();
+    return value;
+  }
 
-      if (
-        rightChildIndex < this.heap.length &&
-        this.heap[rightChildIndex].priority < this.heap[smallest].priority
-      ) {
-        smallest = rightChildIndex;
-      }
+  percolateDown() {
+    const heap = this.heap;
+    const size = this.size;
 
-      if (smallest !== index) {
-        this.swap(index, smallest);
-        index = smallest;
-      } else {
+    let pos = 1;
+    const item = heap[pos];
+
+    while (pos * 2 <= size) {
+      let childIndex = pos * 2 + 1;
+      if (childIndex > size || heap[pos * 2][0] < heap[childIndex][0])
+        childIndex = pos * 2;
+      const child = heap[childIndex];
+      if (item[0] <= child[0])
         break;
+      heap[pos] = child;
+      pos = childIndex;
+    }
+
+    heap[pos] = item;
+  }
+}
+
+const solve = () => {
+  const lr = new LineReader();
+
+  const [V, E] = lr.readIntArray();
+  const K = lr.readInt();
+
+  const graph = Array.from({ length: V + 1 }, () => []);
+  const visited = Array(V + 1).fill(false);
+  const distance = Array(V + 1).fill(Infinity);
+
+  const pq = new PriorityQueue();
+
+  distance[K] = 0;
+  pq.push([distance[K], K]);
+
+  for (let i = 0; i < E; i++) {
+    const [u, v, w] = lr.readIntArray();
+    graph[u].push([v, w]);
+  }
+
+  while (pq.size > 0) {
+    const [_, now] = pq.shift();
+
+    if (visited[now] === true)
+      continue;
+
+    visited[now] = true;
+
+    for (const [next, weight] of graph[now]) {
+      if (distance[next] > distance[now] + weight) {
+        distance[next] = distance[now] + weight;
+        pq.push([distance[next], next]);
       }
     }
   }
 
-  swap(i, j) {
-    const temp = this.heap[i];
-    this.heap[i] = this.heap[j];
-    this.heap[j] = temp;
-  }
-}
+  let answer = "";
 
-const input = fs.readFileSync(path).toString().trim().split("\n");
-
-const [V, E] = input.shift().split(" ").map(Number);
-const start = Number(input.shift());
-const adjacency = Array.from({ length: V + 1 }, () => []);
-const distance = Array.from({ length: V + 1 }, () => Infinity);
-const visited = Array.from({ length: V + 1 }, () => false);
-const pq = new PriorityQueue();
-
-input.forEach((i) => {
-  const [s, e, weight] = i.split(" ").map(Number);
-  adjacency[s].push([e, weight]);
-});
-
-pq.enqueue([start, 0]);
-distance[start] = 0;
-
-while (pq.size() > 0) {
-  const [current, currentWeight] = pq.dequeue();
-
-  if (visited[current]) {
-    continue;
+  for (let i = 1; i < V + 1; i++) {
+    answer += `${distance[i] === Infinity ? "INF" : distance[i]}\n`;
   }
 
-  visited[current] = true;
+  return answer;
+};
 
-  for (let [next, nextWeight] of adjacency[current]) {
-    if (distance[current] + nextWeight < distance[next]) {
-      distance[next] = distance[current] + nextWeight;
-      pq.enqueue([next, distance[next]], distance[next]);
-    }
-  }
-}
-
-let result = "";
-
-for (let i of distance.slice(1)) {
-  if (i === Infinity) {
-    result = result + "INF\n";
-  } else {
-    result = result + `${i}\n`;
-  }
-}
-
-console.log(result);
+console.log(solve());
