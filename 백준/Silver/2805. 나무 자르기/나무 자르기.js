@@ -12,26 +12,36 @@ const data = fs
 const solve = () => {
     let answer = 0;
 
-    const [N, M] = data[0].split(" ").map(BigInt);
-    const trees = data[1].split(" ").map(BigInt);
+    const [N, M] = data[0].split(" ").map(Number);
+    const trees = data[1].split(" ").map(Number);
 
-    trees.sort((a, b) => a > b ? 1 : a < b ? -1 : 0);
+    trees.sort((a, b) => a - b);
 
-    let start = 0n,
-        end = trees.at(-1);
+    let start = 0,
+        end = trees[trees.length - 1];
     
     while (start <= end) {
-        const mid = (start + end) / 2n;
-        const length = trees.reduce((accu, val) => val > mid ? accu + (val - mid) : accu, 0n);
-        if (M > length) {
-            end = mid - 1n;
-        } else {
-            start = mid + 1n;
+        const mid = Math.floor((start + end) / 2);
+
+        let total = 0;
+        for (let i = 0; i < N; i++) {
+            if (trees[i] > mid) {
+                total += trees[i] - mid;
+            }
+            if (total > M) {
+                break;
+            }
+        }
+        
+        if (total >= M) {
+            start = mid + 1;
             answer = mid;
+        } else {
+            end = mid - 1;
         }
     }
 
-    return answer.toString();
+    return answer;
 };
 
 console.log(solve());
