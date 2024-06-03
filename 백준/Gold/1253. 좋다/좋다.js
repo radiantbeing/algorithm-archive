@@ -1,56 +1,39 @@
 const fs = require("fs");
 
 const data = fs
-  .readFileSync(
-    process.platform === "linux" ? "/dev/stdin" : "input.txt"
-  )
-  .toString()
-  .trim()
-  .split("\n");
+    .readFileSync(
+        process.platform === "linux" ? 0 : "input.txt", 
+        "utf-8"
+    )
+    .toString()
+    .split("\n");
 
 const solve = () => {
-  const N = data[0];
-  const numbers = data[1].split(" ").map(Number);
-  
-  numbers.sort((a, b) => a - b);
-  
-  let answer = 0;
+    let answer = 0;
+    
+    const N = data[0];
+    const A = data[1].split(" ").map(Number);
 
-  for (let i = 0; i < N; i++) {
-    let start = 0;
-    let end = N - 1;
+    A.sort((a, b) => a - b);
 
-    while (start < end) {
-      const sum = numbers[start] + numbers[end];
-
-      if (sum < numbers[i]) {
-        start++;
-        continue;
-      }
-
-      if (sum > numbers[i]) {
-        end--;
-        continue;
-      }
-
-      if (start !== i && end !== i) {
-        answer++;
-        break;
-      }
-
-      if (start === i) {
-        start++;
-        continue;
-      }
-
-      if (end === i) {
-        end--;
-        continue;
-      }
+    for (let i = 0; i < N; i++) {
+        let startIndex = 0,
+            endIndex = N - 1;
+        while (startIndex < endIndex) {
+            const now = A[i];
+            const sum = A[startIndex] + A[endIndex];
+            if (now > sum || i === startIndex)
+                startIndex++;
+            else if (now < sum || i === endIndex)
+                endIndex--;
+            else {
+                answer++;
+                break;
+            }
+        }
     }
-  }
 
-  return answer;
+    return answer;
 };
 
 console.log(solve());
