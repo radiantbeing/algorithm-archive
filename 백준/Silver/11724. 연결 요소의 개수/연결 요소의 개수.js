@@ -1,59 +1,57 @@
 const fs = require("fs");
 
 class LineReader {
-  constructor() {
-    this.data = fs
-      .readFileSync(
-        process.platform === "linux" ? "/dev/stdin" : "input.txt"
-      )
-      .toString()
-      .trim()
-      .split("\n");
-    this.cursor = 0;
-  }
+    data = fs
+        .readFileSync(
+            process.platform === "linux" ? 0 : "input.txt",
+            "utf-8"
+        )
+        .toString()
+        .trimEnd()
+        .split("\n");
+    cursor = 0;
 
-  read() {
-    return this.data[this.cursor++];
-  }
+    read() {
+        return this.data[this.cursor++];
+    }
 
-  readIntArray(delimiter = " ") {
-    return this.read().split(delimiter).map(Number);
-  }
+    readIntArray() {
+        return this.read().split(" ").map(Number);
+    }
 }
 
 const solve = () => {
-  const lr = new LineReader();
-  const [N, M] = lr.readIntArray();
-  const graph = Array.from({ length: N + 1 }, () => []);
-  
-  for (let i = 0; i < M; i++) {
-    const [from, to] = lr.readIntArray();
-    graph[from].push(to);
-    graph[to].push(from);
-  }
+    let answer = 0;    
+    const lineReader = new LineReader();
 
-  const visited = Array.from({ length: N + 1 }, () => false);
+    const [N, M] = lineReader.readIntArray();
+    const graph = Array.from({ length: N + 1}, () => []);
+    const isVisited = Array(N + 1).fill(false);
 
-  visited[0] = true;
-
-  const dfs = (now) => {
-    for (const next of graph[now]) {
-      if (!visited[next]) {
-        visited[next] = true;
-        dfs(next);
-      }
+    for (let m = 0; m < M; m++) {
+        const [start, end] = lineReader.readIntArray();
+        graph[start].push(end);
+        graph[end].push(start);
     }
-  }
 
-  let answer = 0;
+    const dfs = (now) => {
+        for (const next of graph[now]) {
+            if (!isVisited[next]) {
+                isVisited[next] = true;
+                dfs(next);
+            }
+        }
+    };
 
-  for (let i = 1; i <= N; i++) {
-    if (visited[i] === false)
-      answer++;
-    dfs(i);
-  }
+    for (let i = 1; i < N + 1; i++) {
+        if (!isVisited[i]) {
+            answer++;
+            isVisited[i] = true;
+            dfs(i);
+        }
+    }
 
-  return answer;
+    return answer;
 };
 
 console.log(solve());
