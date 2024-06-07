@@ -1,61 +1,66 @@
 const fs = require("fs");
 
-class LineReader {
-  constructor() {
-    this.data = fs
-      .readFileSync(
-        process.platform === "linux" ? "/dev/stdin" : "input.txt"
-      )
-      .toString()
-      .trim()
-      .split("\n");
-    this.cursor = 0;
-  }
+class InputReader {
+    data = fs
+        .readFileSync(
+            process.platform === "linux" ? 0 : "input.txt",
+            "utf-8"
+        )
+        .toString()
+        .trimEnd()
+        .split("\n");
+    cursor = 0;
 
-  read() {
-    return this.data[this.cursor++];
-  }
+    read() {
+        return this.data[this.cursor++];
+    }
 
-  readInt() {
-    return Number(this.read());
-  }
+    readInt() {
+        return Number(this.read());
+    }
 
-  readIntArray() {
-    return this.read().split(" ").map(Number);
-  }
+    readIntArray() {
+        return this.read().split(" ").map(Number);
+    }
 }
 
 const solve = () => {
-  const lr = new LineReader();
-  
-  const N = lr.readInt(),
-        A = lr.readIntArray(),
-        M = lr.readInt(),
-        targets = lr.readIntArray();
+    const inputReader = new InputReader();
 
-  A.sort((a, b) => a - b);
+    const N = inputReader.readInt();
+    const numbers = inputReader.readIntArray();
+    const M = inputReader.readInt();
+    const queries = inputReader.readIntArray();
 
-  let answer = "";
+    numbers.sort((a, b) => a - b);
+    
+    const binarySearch = (target) => {
+        let frontIndex = 0,
+            rearIndex = N - 1;
+        while (frontIndex <= rearIndex) {
+            const medianIndex = Math.floor((frontIndex + rearIndex) / 2);
+            const median = numbers[medianIndex];
+            if (median < target) {
+                frontIndex = medianIndex + 1;    
+            } else if (median > target) {
+                rearIndex = medianIndex - 1;
+            } else {
+                return true;
+            }
+        }
+        return false;
+    };
 
-  for (const target of targets) {
-    let start = 0,
-        end = N - 1,
-        isFound = 0;
-    while (start <= end) {
-      const mid = ((start + end) / 2) | 0;
-      if (A[mid] < target)
-        start = mid + 1;
-      else if (A[mid] > target)
-        end = mid - 1;
-      else {
-        isFound = 1;
-        break;
-      }
+    let answer = "";
+
+    for (let i = 0; i < M; i++) {
+        if (binarySearch(queries[i]))
+            answer += 1 + "\n";
+        else
+            answer += 0 + "\n";
     }
-    answer += `${isFound}\n`;
-  }
 
-  return answer;
+    return answer;
 };
 
 console.log(solve());
