@@ -1,75 +1,69 @@
 const fs = require("fs");
 
 class LineReader {
-  constructor() {
-    this.data = fs
-      .readFileSync(
-        process.platform === "linux" ? 0 : "input.txt",
-        "utf-8"
-      )
-      .toString()
-      .trimEnd()
-      .split("\n");
-    this.cursor = 0;
-  }
+    data = fs
+        .readFileSync(
+            process.platform === "linux" ? 0 : "input.txt",
+            "utf-8"
+        )
+        .toString()
+        .trim()
+        .split("\n");
+    cursor = 0;
 
-  read() {
-    return this.data[this.cursor++];
-  }
+    read() {
+        return this.data[this.cursor++];
+    }
 
-  readInt() {
-    return Number(this.read());
-  }
+    readInt() {
+        return Number(this.read());
+    }
 
-  readIntArray() {
-    return this.read().split(" ").map(Number);
-  }
+    readIntArray() {
+        return this.read().split(" ").map(Number);
+    }
 }
 
 const solve = () => {
-  const lr = new LineReader();
+    const lineReader = new LineReader();
 
-  const N = lr.readInt();
-  const graph = Array.from({ length: N + 1 }, () => []);
-  const indegree = Array.from({ length: N + 1 }, () => 0);
-  const buildTime = Array.from({ length: N + 1 }, () => 0);
+    const N = lineReader.readInt();
+    const graph = Array.from({ length: N + 1 }, () => []);
+    const inDegree = Array(N + 1).fill(0);
+    const build = Array(N + 1).fill(0);
 
-  for (let i = 1; i < N + 1; i++) {
-    const [time, ...preBuildings] = lr.readIntArray();
-    buildTime[i] = time;
-    for (const building of preBuildings) {
-      if (building === -1) break;
-      graph[building].push(i);
-      indegree[i]++;
+    for (let now = 1; now < N + 1; now++) {
+        const [time, ...pres] = lineReader.readIntArray();
+        build[now] = time;
+        for (const pre of pres) {
+            if (pre === -1) break;
+            inDegree[now]++;
+            graph[pre].push(now);
+        }
     }
-  }
 
-  const queue = [];
+    const queue = [];
+    const answer = Array(N + 1).fill(0);
 
-  for (let i = 1; i < N + 1; i++) {
-    if (indegree[i] === 0)
-      queue.push(i);
-  }  
-
-  const result = Array.from({ length: N + 1 }, () => 0);
-
-  while(queue.length > 0) {
-    const now = queue.shift();
-    for (const next of graph[now]) {
-        indegree[next]--;
-        result[next] = Math.max(result[next], result[now] + buildTime[now]);
-        if (indegree[next] === 0)
-          queue.push(next);
+    for (let now = 1; now < N + 1; now++) {
+        if (inDegree[now] === 0) {
+            queue.push(now);
+            answer[now] = build[now];
+        } 
     }
-  }
 
-  let answer = "";
+    while (queue.length > 0) {
+        const now = queue.shift();
+        for (const next of graph[now]) {
+            inDegree[next]--;
+            answer[next] = Math.max(answer[next], answer[now] + build[next]);
+            if (inDegree[next] === 0) {
+                queue.push(next);
+            }
+        }
+    }
 
-  for (let i = 1; i < N + 1; i++) {
-    answer += (result[i] + buildTime[i]) + "\n";
-  }
-
-  return answer;
+    return answer.slice(1).join("\n");
 };
 
 console.log(solve());
