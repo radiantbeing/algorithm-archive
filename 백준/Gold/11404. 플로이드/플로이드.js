@@ -1,45 +1,63 @@
-'use strict'
-
 const fs = require("fs");
 
-const input = fs.readFileSync(process.platform === "linux" ? "/dev/stdin" : "input").toString().trim().split("\n");
-const n = Number(input.shift());
-const m = Number(input.shift());
-const edges = input.map((x) => x.split(" ").map(Number));
+class LineReader {
+  data = fs
+    .readFileSync(
+      process.platform === "linux" ? 0 : "input.txt",
+      "utf-8"
+    )
+    .toString()
+    .trim()
+    .split("\n");
+  cursor = 0;
 
-function solution(n, m, edges) {
-    const distance = Array.from({ length: n + 1 }, () => Array(n + 1).fill(Infinity));
-    
-    for (let i = 1; i < n + 1; i++) {
-        distance[i][i] = 0;
-    }
+  read() {
+    return this.data[this.cursor++];
+  }
 
-    for (let [s, e, weight] of edges) {
-        if (distance[s][e] > weight) {
-            distance[s][e] = weight;
-        }
-    }
+  readInt() {
+    return Number(this.read());
+  }
 
-
-    for (let k = 1; k < n + 1; k++) {
-        for (let s = 1; s < n + 1; s++) {
-            for (let e = 1; e < n + 1; e++) {
-                distance[s][e] = Math.min(distance[s][e], distance[s][k] + distance[k][e]);
-            }
-        }
-    }
-
-    let answer = "";
-
-    for (let i = 1; i < n + 1; i++) {
-        for (let j = 1; j < n + 1; j++) {
-            answer += `${distance[i][j] === Infinity ? 0 : distance[i][j]} `;
-        }
-        answer += "\n";
-    }
-    
-    return answer;
+  readIntArray() {
+    return this.read().split(" ").map(Number);
+  }
 }
 
-const answer = solution(n, m, edges);
-console.log(answer);
+const solve = () => {
+  const lineReader = new LineReader();
+  const N = lineReader.readInt();
+  const M = lineReader.readInt();
+  const distance = Array.from({ length: N + 1 }, () => Array(N + 1).fill(Infinity));
+
+  for (let i = 1; i < N + 1; i++) {
+      distance[i][i] = 0;
+  }
+
+  for (let i = 0; i < M; i++) {
+    const [start, end, weight] = lineReader.readIntArray();
+    if (distance[start][end] > weight)
+      distance[start][end] = weight;
+    }
+
+  for (let k = 1; k < N + 1; k++) {
+    for (let i = 1; i < N + 1; i++) {
+      for (let j = 1; j < N + 1; j++) {
+        distance[i][j] = Math.min(distance[i][j], distance[i][k] + distance[k][j]);
+      }
+    }
+  }
+
+  let answer = "";
+  
+  for (let i = 1; i < N + 1; i++) {
+    for (let j = 1; j < N + 1; j++) {
+      answer += `${distance[i][j] === Infinity ? 0 : distance[i][j]} `;
+    }
+    answer += "\n";
+  }
+
+  return answer;
+};
+
+console.log(solve());
