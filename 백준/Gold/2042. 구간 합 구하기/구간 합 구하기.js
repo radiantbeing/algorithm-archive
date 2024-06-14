@@ -1,91 +1,86 @@
 const fs = require("fs");
 
 class LineReader {
-    constructor() {
-        this.data = fs
-            .readFileSync(
-                process.platform === "linux" ? 0 : "input.txt",
-                "utf-8"
-            )
-            .toString()
-            .trimEnd()
-            .split("\n");
-        this.cursor = 0;
-    }
+  data = fs
+    .readFileSync(
+      process.platform === "linux" ? 0 : "input.txt",
+      "utf-8"
+    )
+    .toString()
+    .trim()
+    .split("\n");
+  cursor = 0;
 
-    read() {
-        return this.data[this.cursor++];
-    }
+  read() {
+    return this.data[this.cursor++];
+  }
 
-    readInt() {
-        return BigInt(this.read());
-    }
+  readInt() {
+    return Number(this.read());
+  }
+  
+  readBigInt() {
+    return BigInt(this.read());
+  }
 
-    readIntArray(delimiter = " ") {
-        return this.read().split(delimiter).map(BigInt);
-    }
+  readStrArray() {
+    return this.read().split(" ");
+  }
+
+  readIntArray() {
+    return this.readStrArray().map(Number);
+  }
 }
 
 const solve = () => {
-    const reader = new LineReader();
-    const [N, M, K] = reader.readIntArray().map(Number);
+  const lineReader = new LineReader();
 
-    let k = 0;
+  const [N, M, K] =  lineReader.readIntArray();
+  const treeHeight = Math.ceil(Math.log2(N));
+  const tree = Array(2 ** (treeHeight +  1)).fill(BigInt(0));
 
-    while (!(2 ** k >= N)) {
-        k++;
-    }
+  for (let i = 0; i < N; i++) {
+    tree[(2 ** treeHeight) + i] = lineReader.readBigInt();
+  }
 
-    const tree = Array(2 ** k * 2).fill(BigInt(0));
+  for (let i = 2 ** treeHeight - 1; i > 0; i--) {
+    tree[i] = tree[2 * i] + tree[2 * i + 1];
+  }
 
-    for (let i = 0; i < N; i++) {
-        tree[2 ** k + i] = reader.readInt();
-    }
+  let answer = "";
 
-    for (let pos = 2 ** k * 2 - 1; pos > 1; pos--) {
-        const parentIndex = Math.floor(pos / 2);
-        tree[parentIndex] += tree[pos];
-    }
-    
-    const getPrefixSum = (index1, index2) => {
-        let start = 2 ** k - 1 + index1,
-            end = 2 ** k - 1 + index2,
-            sum = BigInt(0);
-        while (start <= end) {
-            if (start % 2 === 1)
-                sum += tree[start];
-            if (end % 2 === 0)
-                sum += tree[end];
-            start = Math.floor((start + 1) / 2);
-            end = Math.floor((end - 1) / 2);
+  for (let i = 0; i < M + K; i++) {
+    let [opcode, operand1, operand2] = lineReader.readStrArray();
+    if (opcode === "1") {
+      operand1 = Number(operand1);
+      operand2 = BigInt(operand2);
+      let index = 2 ** treeHeight + operand1 - 1;
+      const diff = operand2 - tree[index];
+      while (index > 0) {
+        tree[index] += diff;
+        index = Math.floor(index / 2);
+      }
+    } else if (opcode === "2") {
+      operand1 = Number(operand1);
+      operand2 = Number(operand2);
+      let sum = BigInt(0);
+      let startIndex = 2 ** treeHeight + operand1 - 1;
+      let endIndex = 2 ** treeHeight + operand2 - 1;
+      while (startIndex <= endIndex) {
+        if (startIndex % 2 === 1) {
+          sum += tree[startIndex];
         }
-        return sum;
-    };
-
-    const update = (index, value) => {
-        let pos = 2 ** k - 1 + index;
-        const diff = value - tree[pos];
-        while (pos >= 1) {
-            tree[pos] += diff;
-            pos = Math.floor(pos / 2);
+        if (endIndex % 2 === 0) {
+          sum += tree[endIndex];
         }
-    };
-
-    let answer = "";
-
-    for (let i = 0; i < M + K; i++) {
-        let [opcode, operand1, operand2] = reader.readIntArray();
-        opcode = Number(opcode);
-        operand1 = Number(operand1);
-        if (opcode === 1) {
-            update(operand1, operand2);
-        } else if (opcode === 2) {
-            operand2 = Number(operand2);
-            answer += getPrefixSum(operand1, operand2) + "\n";
-        }
+        startIndex = Math.floor((startIndex + 1) / 2);
+        endIndex = Math.floor((endIndex - 1) / 2);
+      }
+      answer += `${sum}\n`;
     }
-    
-    return answer;
+  }
+
+  return answer;
 };
 
 console.log(solve());
