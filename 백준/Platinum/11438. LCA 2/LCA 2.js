@@ -1,126 +1,109 @@
 const fs = require("fs");
 
 class LineReader {
-    constructor() {
-        this.data = fs
-            .readFileSync(
-                process.platform === "linux" ? 0 : "input.txt",
-                "utf-8"
-            )
-            .toString()
-            .trimEnd()
-            .split("\n");
-        this.cursor = 0;
-    }
+  data = fs
+    .readFileSync(
+      process.platform === "linux" ? 0 : "input.txt",
+      "utf-8"
+    )
+    .toString()
+    .trim()
+    .split("\n");
+  cursor = 0;
 
-    read() {
-        return this.data[this.cursor++];
-    }
+  read() {
+    return this.data[this.cursor++];
+  }
 
-    readInt() {
-        return Number(this.read());
-    }
+  readInt() {
+    return Number(this.read());
+  }
 
-    readIntArray(delimiter = " ") {
-        return this.read().split(delimiter).map(Number);
-    }
+  readIntArray() {
+    return this.read().split(" ").map(Number);
+  }
 }
 
 const solve = () => {
-    const reader = new LineReader();
+  const lineReader = new LineReader();
+  const N = lineReader.readInt();
+  const graph = Array.from({ length: N + 1 }, () => []);
 
-    const N = reader.readInt();
-    const tree = Array.from({ length: N + 1 }, () => []);
-    
-    for (let i = 0; i < N - 1; i++) {
-        const [start, end] = reader.readIntArray();
-        tree[start].push(end);
-        tree[end].push(start);        
-    }
-    
-    let kMax = 0;
-    let temp = 1;
+  for (let i = 0; i < N - 1; i++) {
+    const [u, v] = lineReader.readIntArray();
+    graph[u].push(v);
+    graph[v].push(u);
+  }
 
-    while (temp <= N) {
-        temp = temp << 1;
-        kMax += 1
-    }
+  let kMax = 0;
 
-    const depth = Array(N + 1).fill(0);
-    const parent = Array.from({ length: kMax + 1 } , () => Array(N + 1));
-    const visited = Array(N + 1).fill(false);
+  while (2 ** kMax <= N) {
+    kMax++;
+  }
+  
+  const depth = Array(N + 1).fill(0);
+  const visited = Array(N + 1).fill(false);
+  const parent = Array.from({ length: kMax + 1 }, () => Array(N + 1).fill(0));
 
-    const bfs = (node) => {
-        const queue = [];
-        queue.push(node);
-        visited[node] = true;
-        let level = 1;
-        let currentSize = 1;
-        let count = 0;
-
-        while (queue.length > 0) {
-            const now = queue.shift();
-            for (const next of tree[now]) {
-                if (!visited[next]) {
-                    visited[next] = true;
-                    queue.push(next);
-                    parent[0][next] = now;
-                    depth[next] = level;
-                }
-            }
-            count++;
-            if (count === currentSize) {
-                count = 0;
-                currentSize = queue.length;
-                level++;
-            }
+  const bfs = () => {
+    const queue = [];
+    queue.push(1);
+    visited[1] = true;
+    while (queue.length > 0) {
+      const now = queue.shift();
+      for (const next of graph[now]) {
+        if (!visited[next]) {
+          visited[next] = true;
+          depth[next] = depth[now] + 1;
+          parent[0][next] = now;
+          queue.push(next);
         }
-    };
-
-    bfs(1);
-
-    for (let k = 1; k < kMax + 1; k++) {
-        for (let n = 1; n < N + 1; n++) {
-            parent[k][n] = parent[k - 1][parent[k - 1][n]];
-        }
+      }
     }
+  };
 
-    const getLCA = (a, b) => {
-        if (depth[a] > depth[b])
-            [a, b] = [b, a];
-
-        for (let k = kMax; k > -1; k--) {
-            if (
-                2 ** k <= depth[b] - depth[a] && 
-                depth[a] <= depth[parent[k][b]]
-            ) {
-                b = parent[k][b];
-            }
-        }
-
-        for (let k = kMax; k > -1; k--) {
-            if (a === b) break; // 선택된 두 노드의 깊이가 같은 경우 최소 공통 조상
-            if (parent[k][a] !== parent[k][b]) {
-                a = parent[k][a];
-                b = parent[k][b];
-            }
-        }
-
-        let LCA = a;
-        if (a !== b)
-            LCA = parent[0][LCA];
-        return LCA;
-    };
-
-    const M = reader.readInt();
-    let answer = "";
-    
-    for (let i = 0; i < M; i++) {
-        const [a, b] = reader.readIntArray();
-        answer += `${getLCA(a, b)}\n`;
+  bfs();
+  
+  for (let k = 1; k <= kMax; k++) {
+    for (let i = 0; i < N + 1; i++) {
+      parent[k][i] = parent[k - 1][parent[k - 1][i]]
     }
+  }
 
-    return answer;
+  const getLCA = (u, v) => {
+    if (depth[u] > depth[v]) {
+      [u, v] = [v, u];
+    }
+  
+    for (let k = kMax; k >= 0; k--) {
+      if (depth[v] - depth[u] >= (1 << k)) {
+        v = parent[k][v];
+      }
+    }
+  
+    if (u === v) return u;
+  
+    for (let k = kMax; k >= 0; k--) {
+      if (parent[k][u] !== parent[k][v]) {
+        u = parent[k][u];
+        v = parent[k][v];
+      }
+    }
+  
+    return parent[0][u];
+  };
+
+  const M = lineReader.readInt();
+
+  let answer = "";
+
+  for (let i = 0; i < M; i++) {
+    const [u, v] = lineReader.readIntArray();
+    const LCA = getLCA(u, v);
+    answer += `${LCA}\n`;
+  }
+
+  return answer;
 };
 
 console.log(solve());
