@@ -1,31 +1,27 @@
-'use strict'
+const fs = require("fs");
 
-const fs = require('fs');
+const data = fs
+  .readFileSync(
+    process.platform === "linux" ? 0 : "input.txt",
+    "utf-8"
+  )
+  .toString()
+  .trim();
 
-function input() {
-  const file = fs
-    .readFileSync(process.platform === 'linux' ? '/dev/stdin' : 'input')
-    .toString()
-    .trim();
+const solve = () => {
+  const N = Number(data);
+
+  const dp = Array.from({ length: 2 }, () => Array(N + 1));
   
-  const n = Number(file);
-  return n;
-}
-
-function solution(n) {
-  let answer = '';
-  let dp = Array.from({ length: n + 1 }, () => [BigInt(0), BigInt(0)]);
-
-  dp[1][0] = BigInt(0);
+  dp[0][1] = BigInt(0);
   dp[1][1] = BigInt(1);
-  
-  for (let i = 2; i < n + 1; i++) {
-    dp[i][0] = dp[i - 1][0] + dp[i - 1][1];
-    dp[i][1] = dp[i - 1][0];
+
+  for (let i = 2; i < N + 1; i++) {
+    dp[0][i] = dp[0][i - 1] + dp[1][i - 1];
+    dp[1][i] = dp[0][i - 1];
   }
 
-  answer = (dp[n][0] + dp[n][1]).toString();
-  return answer;
-}
+  return String(dp[0][N] + dp[1][N]);
+};
 
-console.log(solution(input()));
+console.log(solve());
