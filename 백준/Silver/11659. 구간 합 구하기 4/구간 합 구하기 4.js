@@ -1,46 +1,44 @@
 const fs = require("fs");
 
-class LineReader {
-  constructor() {
-    this.data = fs
-      .readFileSync(
-        process.platform === "linux" ? "/dev/stdin" : "input.txt"
-      )
-      .toString()
-      .trim()
-      .split("\n");
-    this.cursor = 0;
-  }
+class Reader {
+  data = fs
+    .readFileSync(
+      process.platform === "linux" ? 0 : "input.txt",
+      "utf-8"
+    )
+    .toString()
+    .trim()
+    .split("\n");
+  
+  cursor = 0;
 
   read() {
     return this.data[this.cursor++];
   }
 
-  readIntArray(delimiter = " ") {
-    return this.read().split(delimiter).map(Number);
+  readIntArray() {
+    return this.read().split(" ").map(Number);
   }
 }
 
-const solve = () => {
-  const lr = new LineReader();
-  const [N, M] = lr.readIntArray();
+function solve() {
+  const reader = new Reader();
+  const [N, M] = reader.readIntArray();
+  const numbers = [0, ...reader.readIntArray()];
 
-  const numbers = lr.readIntArray();
-  const prefixSum = [...numbers];
+  const prefixSum = new Array(N + 1).fill(0);
+  const answer = [];
 
-  for (let i = 1; i < N; i++) {
+  for (let i = 1; i <= N; i++) {
     prefixSum[i] = prefixSum[i - 1] + numbers[i];
   }
-
-  let answer = "";
-
+  
   for (let i = 0; i < M; i++) {
-    let [start, end] = lr.readIntArray();
-    start--; end--;
-    answer += `${prefixSum[end] - (prefixSum[start - 1] ?? 0)}\n`;
+    const [startIndex, endIndex] = reader.readIntArray();
+    answer.push(prefixSum[endIndex] - prefixSum[startIndex - 1]);
   }
 
-  return answer;
-};
+  return answer.join("\n");
+}
 
 console.log(solve());
