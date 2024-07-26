@@ -2,49 +2,37 @@ const fs = require("fs");
 
 const data = fs
   .readFileSync(
-    process.platform === "linux" ? "/dev/stdin" : "input.txt"
+    process.platform === "linux" ? 0 : "input.txt",
+    "utf-8"
   )
-  .toString()
-  .trim();
+  .toString();
 
-const solve = () => {
-  const expression = data;
-  const operands = [];
-  const opcodes = [];
+function solve() {
+  const formula = data;
 
-  let temp = "";
-
-  for (let i = 0; i < expression.length; i++) {
-    const s = expression[i];
-    if (s === "+" || s === "-") {
-      operands.push(Number(temp));
-      opcodes.push(s);
-      temp = "";
-    } else {
-      temp += s;
-    }
-  }
-  if (temp.length > 0) {
-    operands.push(Number(temp));
-  }
-
-  const firstSub = opcodes.indexOf("-");
-
-  if (firstSub === -1) {
-    return operands.reduce((accu ,val) => accu + val, 0);
-  }
-
+  const chunks = formula.split("-");
   let answer = 0;
 
-  for (let i = 0; i < operands.length; i++) {
-    if (i <= firstSub) {
-      answer += operands[i];
-    } else {
-      answer -= operands[i];
+  let isFirstChunk = true;
+
+  for (const chunk of chunks) {
+    if (isFirstChunk) {
+      isFirstChunk = false;
+      answer += 
+        chunk
+        .split("+")
+        .map(Number)
+        .reduce((accumulator, value) => accumulator + value, 0);
+      continue;
     }
+    answer -=
+        chunk
+        .split("+")
+        .map(Number)
+        .reduce((accumulator, value) => accumulator + value, 0);
   }
 
   return answer;
-};
+}
 
 console.log(solve());
