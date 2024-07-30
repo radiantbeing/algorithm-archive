@@ -1,14 +1,12 @@
 const fs = require("fs");
 
-class LineReader {
+class Reader {
   data = fs
-    .readFileSync(
-      process.platform === "linux" ? 0 : "input.txt",
-      "utf-8"
-    )
+    .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
     .toString()
     .trim()
     .split("\n");
+  
   cursor = 0;
 
   read() {
@@ -24,40 +22,45 @@ class LineReader {
   }
 }
 
-const solve = () => {
-  const lineReader = new LineReader();
-  const N = lineReader.readInt();
-  const M = lineReader.readInt();
-  const distance = Array.from({ length: N + 1 }, () => Array(N + 1).fill(Infinity));
+function solve() {
+  const reader = new Reader();
+  const N = reader.readInt();
+  const M = reader.readInt();
 
-  for (let i = 1; i < N + 1; i++) {
-      distance[i][i] = 0;
+  // 인접 행렬
+  const graph = Array.from(
+    { length: N + 1 }, 
+    () => new Array(N + 1).fill(Infinity)
+  );
+
+  for (let i = 1; i <= N; i++) {
+    graph[i][i] = 0;
+  }
+  
+  for (let i = 0; i < M; i++) {
+    const [s, e, w] = reader.readIntArray();
+    graph[s][e] = Math.min(graph[s][e], w);
   }
 
-  for (let i = 0; i < M; i++) {
-    const [start, end, weight] = lineReader.readIntArray();
-    if (distance[start][end] > weight)
-      distance[start][end] = weight;
-    }
-
-  for (let k = 1; k < N + 1; k++) {
-    for (let i = 1; i < N + 1; i++) {
-      for (let j = 1; j < N + 1; j++) {
-        distance[i][j] = Math.min(distance[i][j], distance[i][k] + distance[k][j]);
+  for (let k = 1; k <= N; k++) {
+    for (let i = 1; i <= N; i++) {
+      for (let j = 1; j <= N; j++) {
+        graph[i][j] = Math.min(graph[i][j], graph[i][k] + graph[k][j]);
       }
     }
   }
 
-  let answer = "";
-  
-  for (let i = 1; i < N + 1; i++) {
-    for (let j = 1; j < N + 1; j++) {
-      answer += `${distance[i][j] === Infinity ? 0 : distance[i][j]} `;
+  const answer = [];
+
+  for (let i = 1; i <= N; i++) {
+    const temp = [];
+    for (let j = 1; j <= N; j++) {
+      temp.push(graph[i][j] === Infinity ? 0 : graph[i][j]);
     }
-    answer += "\n";
+    answer.push(temp.join(" "));
   }
 
-  return answer;
-};
+  return answer.join("\n");
+}
 
 console.log(solve());
