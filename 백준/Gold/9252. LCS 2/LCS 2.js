@@ -1,49 +1,49 @@
-const fs = require("fs");
+const fs = require('fs');
 
 const data = fs
-    .readFileSync(
-        process.platform === "linux" ? 0 : "input.txt",
-        "utf-8"
-    )
-    .toString()
-    .trimEnd()
-    .split("\n");
+	.readFileSync(process.platform === 'linux' ? 0 : 'input.txt', 'utf-8')
+	.toString()
+	.trim()
+	.split('\n');
 
-const solve = () => {
-    const [sequence1, sequence2] = data;
-    const N = sequence1.length;
-    const M = sequence2.length;
-    const DP = Array.from({ length: N + 1 }, () => Array(M + 1).fill(0));
+function solve() {
+	const sequence1 = data[0];
+	const sequence2 = data[1];
 
-    for (let i = 1; i < N + 1; i++) {
-        for (let j = 1; j < M + 1; j++) {
-            if (sequence1[i - 1] === sequence2[j - 1])
-                DP[i][j] = DP[i - 1][j - 1] + 1;
-            else
-                DP[i][j] = Math.max(DP[i - 1][j], DP[i][j - 1]);
-        }
-    }
+	const length1 = sequence1.length;
+	const length2 = sequence2.length;
 
-    console.log(DP[N][M]);
+	const dp = Array.from({ length: length1 + 1 }, () => new Array(length2 + 1).fill(0));
 
-    let answer = [];
+	for (let i = 1; i <= length1; i++) {
+		for (let j = 1; j <= length2; j++) {
+			if (sequence1[i - 1] === sequence2[j - 1])
+				dp[i][j] = dp[i - 1][j - 1] + 1;
+			else
+				dp[i][j] = Math.max(dp[i][j - 1], dp[i - 1][j]);
+		}
+	}
 
-    const getSubsequence = (i, j) => {
-        if (i === 0 || j === 0) return;
-        if (sequence1[i - 1] === sequence2[j - 1]) {
-            answer.push(sequence1[i - 1]);
-            getSubsequence(i - 1, j - 1);
-        } else {
-            if (DP[i - 1][j] > DP[i][j - 1])
-                getSubsequence(i - 1, j);
-            else
-                getSubsequence(i, j - 1);
-        }
-    };
+	const LCS = [];
 
-    getSubsequence(N, M);
+	function getLCS(i, j) {
+		if (i === 0 || j === 0)
+			return;
+		if (sequence1[i - 1] === sequence2[j - 1]) {
+			LCS.push(sequence1[i - 1]);
+			getLCS(i - 1, j - 1);
+		} else {
+			if (dp[i][j - 1] > dp[i - 1][j])
+				getLCS(i, j - 1);
+			else
+				getLCS(i - 1, j);
+		}
+	}
 
-    return answer.reverse().join("")
-};
+	getLCS(length1, length2);
+	LCS.reverse()
+
+	return dp[length1][length2] + '\n' + LCS.join('');
+}
 
 console.log(solve());
