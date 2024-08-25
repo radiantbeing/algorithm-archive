@@ -1,11 +1,4 @@
 function solution(arr) {
-    return arr.reduce((answer, now) => {
-        const top = answer[answer.length - 1];
-        
-        if (top !== now) {
-            answer.push(now);
-        }
-        
-        return answer;
-    }, []);
+    return arr
+        .filter((val, idx, _arr) => val !== _arr[idx - 1]);
 }
