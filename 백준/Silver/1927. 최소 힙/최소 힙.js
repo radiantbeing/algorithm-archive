@@ -1,112 +1,127 @@
 const fs = require("fs");
 
-class LineReader {
-  #data = fs
-    .readFileSync(process.platform === "linux" ? "/dev/stdin" : "input.txt")
-    .toString()
-    .trim()
-    .split("\n");
-  #line = 0;
+class PriorityQueue {
+  heap = new Array(64);
 
-  read() {
-    return this.#data[this.#line++];
+  size = 0;
+
+  constructor(comparator) {
+    this.comparator = comparator;
   }
 
-  readInt() {
-    return +this.read();
-  }
-}
+  push(item) {
+    const heap = this.heap;
+    const size = ++this.size;
+    
+    if (heap.length === size) {
+      heap.length *= 2;
+    }
 
-class MinHeap {
-  #heap = [null];
-
-  peek() {
-      return this.#heap[1];
-  }
-  
-  insert(value) {
-      const heap = this.#heap;
-      heap.push(value);
-      this.percolateUp();
-  }
-
-  shift() {
-      const heap = this.#heap;
-      const value = this.#heap[1];
-      const size = this.size();
-      if (size === 0)
-          return;
-      if (size === 1)
-          return heap.pop();
-
-      heap[1] = heap.pop();
-      this.percolateDown();
-
-      return value;
+    heap[size] = item;
+    this.percolateUp();
   }
 
   percolateUp() {
-      const heap = this.#heap;
-      const size = this.size();
-      const item = heap[size];
-      let pos = size;
+    const heap = this.heap;
+    const size = this.size;
+    const comparator = this.comparator;
+    
+    const item = heap[size];
+    let pos = size;
 
-      while (pos > 1) {
-          const parent = heap[pos / 2 | 0];
-          if (parent <= item)
-              break;
-          heap[pos] = parent;
-          pos = pos / 2 | 0;
+    while (pos > 1) {
+      const parentPos = Math.floor(pos / 2);
+      const parent = heap[parentPos];
+
+      if (comparator(item, parent) >= 0) {
+        break;
       }
-      heap[pos] = item;
+
+      heap[pos] = parent;
+      pos = parentPos;
+    }
+
+    heap[pos] = item;
   }
-  
+
+  shift() {
+    const heap = this.heap;
+    const item = heap[1];
+    if (item === undefined) {
+      return;
+    }
+    const size = --this.size;
+
+    heap[1] = heap[size + 1];
+    heap[size + 1] = undefined;
+    this.percolateDown();
+
+    return item;
+  }
+
   percolateDown() {
-      const heap = this.#heap;
-      const size = this.size();
-      const item = heap[1];
-      let pos = 1;
+    const heap = this.heap;
+    const size = this.size;
+    const comparator = this.comparator;
 
-      while (pos * 2 <= size) {
-          let childIndex = pos * 2 + 1;
-          if (childIndex > size || heap[pos * 2] < heap[childIndex])
-              childIndex = pos * 2;
-          const child = heap[childIndex];
-          if (item <= child)
-              break;
-          heap[pos] = child;
-          pos = childIndex;
+    const item = heap[1];
+    let pos = 1;
+
+    while (pos * 2 <= size) {
+      let childPos = pos * 2 + 1;
+      if (childPos > size || comparator(heap[pos * 2], heap[childPos]) < 0) {
+        childPos = pos * 2;
       }
-      heap[pos] = item;
-  }
-  
-  size() {
-      return this.#heap.length - 1;
-  }
+      const child = heap[childPos];
+      
+      if (comparator(item, child) <= 0) {
+        break;
+      }
 
-  heap() {
-      return this.#heap;
+      heap[pos] = child;
+      pos = childPos;
+    }
+
+    heap[pos] = item;
   }
 }
 
-const solve = () => {
-  const lr = new LineReader();
-  const minHeap = new MinHeap();
+class InputReader {
+  data = fs
+    .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
+    .toString()
+    .trim()
+    .split("\n");
+  
+  cursor = 0;
 
-  const N = lr.readInt();
+  read() {
+    return this.data[this.cursor++];
+  }
 
-  let answer = "";
+  readInt() {
+    return parseInt(this.read());
+  }
+}
 
-  for (let i = 0; i < N; i++) {
-    const number = lr.readInt();
-    if (number === 0) {
-      answer += `${minHeap.shift() ?? 0}\n`;
+
+function solve() {
+  const reader = new InputReader();
+  const N = reader.readInt();
+  
+  const priorityQueue = new PriorityQueue((a, b) => a - b);
+  const answer = [];
+
+  for (let _ = 0; _ < N; _++) {
+    const x = reader.readInt();
+    if (x === 0) {
+      answer.push(priorityQueue.shift() || 0);
     } else {
-      minHeap.insert(number);
+      priorityQueue.push(x);
     }
   }
 
-  return answer;
-};
+  return answer.join("\n");
+}
 
 console.log(solve());
