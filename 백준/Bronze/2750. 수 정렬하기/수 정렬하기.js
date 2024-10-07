@@ -1,48 +1,40 @@
 const fs = require("fs");
 
-class LineReader {
-  constructor() {
-    this.data = fs
-      .readFileSync(process.platform === "linux" ? "/dev/stdin" : "input.txt")
-      .toString()
-      .trim()
-      .split("\n");
-    this.cursor = 0;
-  }
+const reader = new class {
+  data = fs
+    .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
+    .toString()
+    .trim()
+    .split("\n");
+  
+  cursor = 0;
 
   read() {
     return this.data[this.cursor++];
   }
 
   readInt() {
-    return Number(this.read());
+    return parseInt(this.read());
   }
-}
+};
 
-const solve = () => {
-  const lr = new LineReader();
-  const N = lr.readInt();
-  const numbers = [];
+function solve() {
+  const N = reader.readInt();
+  const numbers = new Array(N);
 
   for (let i = 0; i < N; i++) {
-    numbers.push(lr.readInt());
+    numbers[i] = reader.readInt();
   }
-  
-  // Bubble Sort
+
   for (let i = 0; i < N; i++) {
     for (let j = 0; j < N - i - 1; j++) {
-      if (numbers[j] > numbers[j + 1])
+      if (numbers[j] > numbers[j + 1]) {
         [numbers[j], numbers[j + 1]] = [numbers[j + 1], numbers[j]];
+      }
     }
   }
 
-  let answer = "";
-
-  for (let i = 0; i < N; i++) {
-    answer += `${numbers[i]}\n`;
-  }
-
-  return answer;
-};
+  return numbers.join("\n");
+}
 
 console.log(solve());
