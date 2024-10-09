@@ -1,78 +1,79 @@
 const fs = require("fs");
 
-class LineReader {
-    data = fs
-        .readFileSync(
-            process.platform === "linux" ? 0 : "input.txt",
-            "utf-8"
-        )
-        .toString()
-        .trimEnd()
-        .split("\n");
-    cursor = 0;
+const reader = new class {
+  data = fs
+    .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
+    .toString()
+    .trim()
+    .split("\n");
+  
+  cursor = 0;
 
-    read() {
-        return this.data[this.cursor++];
-    }
+  read() {
+    return this.data[this.cursor++];
+  }
 
-    readIntArray() {
-        return this.read().split(" ").map(Number);
-    }
+  readIntArray() {
+    return this.read().split(" ").map(s => parseInt(s));
+  }
 }
 
-const solve = () => {
-    let answer = "";
-    
-    const lineReader = new LineReader();
-    
-    const [N, M, V] = lineReader.readIntArray();
-    const graph = Array.from({ length: N + 1 }, () => []);
-    let isVisited = Array(N + 1).fill(false);
-    
-    for (let i = 0; i < M; i++) {
-        const [start, end] = lineReader.readIntArray();
-        graph[start].push(end);
-        graph[end].push(start);
-    }
+function solve() {
+  const [N, M, source] = reader.readIntArray();
 
-    for (let i = 1; i < N + 1; i++) {
-        graph[i].sort((a, b) => a - b);
-    }
+  const graph = Array.from({ length: N + 1 }, () => []);
+  let visited = new Array(N + 1).fill(false);
+  let order = "";
 
-    const dfs = (now) => {
-        isVisited[now] = true;
-        answer += now + " ";
-        for (const next of graph[now]) {
-            if (!isVisited[next])
-                dfs(next);
+  for (let _ = 0; _ < M; _++) {
+    const [start, end] = reader.readIntArray();
+    graph[start].push(end);
+    graph[end].push(start);
+  }
+
+  for (let i = 1; i <= N; i++) {
+    graph[i].sort((a, b) => a - b);
+  }
+
+  const clearVisited = () => {
+    visited = visited.fill(false);
+  };
+
+  const dfs = (now) => {
+    order += `${now} `;
+    visited[now] = true;
+    for (const next of graph[now]) {
+      if (!visited[next]) {
+        dfs(next);
+      }
+    }
+  };
+  
+  const bfs = (source) => {
+    const queue = [];
+    queue.push(source);
+    visited[source] = true;
+    
+    while (queue.length > 0) {
+      const now = queue.shift();
+      order += `${now} `;
+      for (const next of graph[now]) {
+        if (!visited[next]) {
+          visited[next] = true;
+          queue.push(next);
         }
+      }
     }
+  };
+  
+  dfs(source);
 
-    dfs(V);
+  order += "\n";
+  clearVisited();
+  
+  bfs(source);
 
-    answer += "\n";
-    isVisited = Array(N + 1).fill(false);
-
-    const bfs = () => {
-        const queue = [];
-        queue.push(V);
-        isVisited[V] = true;
-        answer += V + " ";
-        while (queue.length > 0) {
-            const now = queue.shift();
-            for (const next of graph[now]) {
-                if (!isVisited[next]) {
-                    isVisited[next] = true;
-                    queue.push(next);
-                    answer += next + " ";
-                }
-            }
-        }
-    };
-
-    bfs();
-
-    return answer;
-};
+  return order;
+}
 
 console.log(solve());
