@@ -1,66 +1,57 @@
 const fs = require("fs");
 
-class InputReader {
-    data = fs
-        .readFileSync(
-            process.platform === "linux" ? 0 : "input.txt",
-            "utf-8"
-        )
-        .toString()
-        .trimEnd()
-        .split("\n");
-    cursor = 0;
+const reader = {
+  data: fs
+    .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
+    .toString()
+    .trim()
+    .split("\n"),
+  
+  cursor: 0,
 
-    read() {
-        return this.data[this.cursor++];
-    }
+  read() {
+    return this.data[this.cursor++];
+  },
 
-    readInt() {
-        return Number(this.read());
-    }
+  readInt() {
+    return parseInt(this.read());
+  },
 
-    readIntArray() {
-        return this.read().split(" ").map(Number);
-    }
+  readIntArray() {
+    return this.read().split(" ").map(s => parseInt(s));
+  }
 }
 
-const solve = () => {
-    const inputReader = new InputReader();
+function solve() {
+  const N = reader.readInt();
+  const numbers = reader.readIntArray();
+  const M = reader.readInt();
+  const targets = reader.readIntArray();
 
-    const N = inputReader.readInt();
-    const numbers = inputReader.readIntArray();
-    const M = inputReader.readInt();
-    const queries = inputReader.readIntArray();
+  const binarySearch = (target) => {
+    let leftIndex = 0;
+    let rightIndex = N - 1;
 
-    numbers.sort((a, b) => a - b);
-    
-    const binarySearch = (target) => {
-        let frontIndex = 0,
-            rearIndex = N - 1;
-        while (frontIndex <= rearIndex) {
-            const medianIndex = Math.floor((frontIndex + rearIndex) / 2);
-            const median = numbers[medianIndex];
-            if (median < target) {
-                frontIndex = medianIndex + 1;    
-            } else if (median > target) {
-                rearIndex = medianIndex - 1;
-            } else {
-                return true;
-            }
-        }
-        return false;
-    };
-
-    let answer = "";
-
-    for (let i = 0; i < M; i++) {
-        if (binarySearch(queries[i]))
-            answer += 1 + "\n";
-        else
-            answer += 0 + "\n";
+    while (leftIndex <= rightIndex) {
+      const medianIndex = Math.floor((leftIndex + rightIndex) / 2);
+      const median = numbers[medianIndex];
+      if (median < target) {
+        leftIndex = medianIndex + 1;
+      } else if (median > target) {
+        rightIndex = medianIndex - 1;
+      } else {
+        return true;
+      }
     }
 
-    return answer;
-};
+    return false;
+  };
+
+  numbers.sort((a, b) => a - b);
+
+  return targets
+    .map(target => binarySearch(target) ? 1 : 0)
+    .join("\n");
+}
 
 console.log(solve());
