@@ -1,38 +1,32 @@
 const fs = require("fs");
 
-const data = fs
-  .readFileSync(
-    process.platform === "linux" ? 0 : "input.txt",
-    "utf-8"
-  )
-  .toString();
+const reader = {
+  data: fs
+    .readFileSync(
+      process.platform === "linux" ? 0 : "input.txt", 
+      "utf-8"
+    )
+    .toString()
+    .trim(),
+
+  read() {
+    return this.data;
+  },
+}
 
 function solve() {
-  const formula = data;
+  const computeChunk = chunk => 
+    chunk
+      .split("+")
+      .map(n => parseInt(n))
+      .reduce((accu, val) => accu + val, 0)
 
-  const chunks = formula.split("-");
-  let answer = 0;
+  const expression = reader.read();
+  const chunks = expression.split("-").map(computeChunk);
 
-  let isFirstChunk = true;
-
-  for (const chunk of chunks) {
-    if (isFirstChunk) {
-      isFirstChunk = false;
-      answer += 
-        chunk
-        .split("+")
-        .map(Number)
-        .reduce((accumulator, value) => accumulator + value, 0);
-      continue;
-    }
-    answer -=
-        chunk
-        .split("+")
-        .map(Number)
-        .reduce((accumulator, value) => accumulator + value, 0);
-  }
-
-  return answer;
+  return chunks.reduce((accu, val, idx) => 
+    idx === 0 ? accu + val : accu - val
+  );
 }
 
 console.log(solve());
