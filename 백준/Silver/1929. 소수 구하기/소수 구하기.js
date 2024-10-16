@@ -1,34 +1,40 @@
 const fs = require("fs");
 
-const solve = () => {
-    const [M, N] = fs
-        .readFileSync(
-            process.platform === "linux" ? 0 : "input.txt", 
-            "utf-8"
-        )
-        .toString()
-        .trim()
-        .split(" ")
-        .map(Number);
-    
-    const isPrime = Array(N + 1).fill(true);
-    isPrime[0] = isPrime[1] = false;
+const reader = {
+  data: fs
+    .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
+    .toString()
+    .trim(),
 
-    for (let i = 0; i <= Math.floor(N ** (1 / 2)); i++) {
-        if (!isPrime[i]) 
-            continue;
-        for (let j = i + i; j < N + 1; j += i)
-            isPrime[j] = false;
-    }
+  read() {
+    return this.data;
+  },
 
-    let answer = "";
-
-    for (let i = M; i < N + 1; i++) {
-        if (isPrime[i]) 
-            answer += i + "\n";
-    }
-
-    return answer;
+  readIntArray() {
+    return this.read().split(" ").map(s => parseInt(s));
+  }
 };
+
+function solve() {
+  const [M, N] = reader.readIntArray();
+  
+  const sieve = new Array(N + 1).fill(true);
+  sieve[0] = sieve[1] = false;
+
+  for (let i = 2; i <= Math.sqrt(N); i++) {
+    if (!sieve[i]) continue;
+    for (let j = i + i; j <= N; j += i) {
+      sieve[j] = false;
+    }
+  }
+
+  const answer = [];
+
+  for (let i = M; i <= N; i++) {
+    if (sieve[i]) answer.push(i);
+  }
+
+  return answer.join("\n");
+}
 
 console.log(solve());
