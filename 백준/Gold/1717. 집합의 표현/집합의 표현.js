@@ -1,56 +1,54 @@
 const fs = require("fs");
 
-class LineReader {
-    data = fs
-        .readFileSync(
-            process.platform === "linux" ? 0 : "input.txt",
-            "utf-8"
-        )
-        .toString()
-        .trim()
-        .split("\n");
-    cursor = 0;
+const reader = {
+  data: fs
+    .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
+    .toString()
+    .trim()
+    .split("\n"),
 
-    read() {
-        return this.data[this.cursor++];
-    }
+  cursor: 0,
 
-    readIntArray() {
-        return this.read().split(" ").map(Number);
-    }
+  read() {
+    return this.data[this.cursor++];
+  },
+
+  readIntArray() {
+    return this.read().split(" ").map(s => parseInt(s));
+  }
 }
 
-const solve = () => {
-    const lineReader = new LineReader();
+function solve() {
+  const [n, m] = reader.readIntArray();
+  
+  const parent = Array.from({ length: n + 1 }, (_, i) => i);
+  
+  const find = (vertex) => {
+    if (vertex === parent[vertex])
+      return vertex;
 
-    const [n, m] = lineReader.readIntArray();
-    const parents = Array.from({ length: n + 1}, (_, index) => index);
+    parent[vertex] = find(parent[vertex]);
+    return parent[vertex];
+  };
 
-    const find = (v) => {
-        if (v === parents[v])
-            return v;
-        parents[v] = find(parents[v]);
-        return parents[v];
-    };
+  const union = (vertex1, vertex2) => {
+    parent[find(vertex1)] = find(vertex2);
+  };
 
-    const union = (u, v) => {
-        u = find(u);
-        v = find(v);
-        parents[v] = u;
-    };
+  const answer = [];
 
-    let answer = "";
-
-    for (let i = 0; i < m; i++) {
-        const [opcode, operand1, operand2] = lineReader.readIntArray();
-        if (opcode === 0) {
-            union(operand1, operand2);
-        } else if (opcode === 1) {
-            answer += find(operand1) === find(operand2) ? "YES\n" : "NO\n";
-        }
+  for (let i = 0; i < m; i++) {
+    const [type, vertex1, vertex2] = reader.readIntArray();
+    if (type === 0) {
+      union(vertex1, vertex2);
     }
+    if (type === 1) {
+      const inSameSet = find(vertex1) === find(vertex2);
+      answer.push(inSameSet ? "YES" : "NO");
+    }
+  }
 
-    return answer;
-};
+  return answer.join("\n");
+}
 
 console.log(solve());
