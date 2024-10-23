@@ -1,134 +1,145 @@
 const fs = require("fs");
 
-class LineReader {
-    constructor() {
-        this.data = fs
-            .readFileSync(
-                process.platform === "linux" ? 0 : "input.txt",
-                "utf-8"
-            )
-            .toString()
-            .trimEnd()
-            .split("\n");
-        this.cursor = 0;
-    }
+const reader = {
+  data: fs 
+  .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
+  .toString()
+  .trim()
+  .split("\n"),
 
-    read() {
-        return this.data[this.cursor++];
-    }
+  cursor: 0,
 
-    readIntArray() {
-        return this.read().split(" ").map(Number);
-    }
-}
+  read() {
+    return this.data[this.cursor++];
+  },
+
+  readInt() {
+    return parseInt(this.read());
+  },
+
+  readIntArray() {
+    return this.read().split(" ").map(s => parseInt(s));
+  }
+};
 
 class PriorityQueue {
-    constructor(comparator) {
-        this.heap = new Array(64);
-        this.size = 0;
-        this.comparator = comparator;
+  heap = new Array(64);
+  
+  size = 0;
+
+  constructor(comparator) {
+    this.comparator = comparator;
+  }
+
+  push(item) {
+    const heap = this.heap;
+    const size = ++this.size;
+
+    if (heap.length === size) {
+      heap.length *= 2;
     }
 
-    push(value) {
-        const heap = this.heap;
-        const size = ++this.size;
+    heap[size] = item;
+    this.percolateUp();
+  }
 
-        if (size === heap.length)
-            heap.length *= 2;
+  percolateUp() {
+    const heap = this.heap;
+    const size = this.size;
+    const comparator = this.comparator;
 
-        heap[size] = value;
-        this.percolateUp();
+    const item = heap[size];
+    let index = size;
+
+    while (index > 1) {
+      const parentIndex = Math.floor(index / 2);
+      const parent = heap[parentIndex];
+
+      if (comparator(parent, item) <= 0)
+        break;
+
+      heap[index] = parent;
+      index = parentIndex;
     }
 
-    percolateUp() {
-        const heap = this.heap;
-        const size = this.size;
-        const comparator = this.comparator;
+    heap[index] = item;
+  }
 
-        let pos = size;
-        const item = heap[pos];
+  shift() {
+    const heap = this.heap;
 
-        while (pos > 1) {
-            const parent = heap[Math.floor(pos / 2)];
-            if (comparator(item, parent) >= 0)
-                break;
-            heap[pos] = parent;
-            pos = Math.floor(pos / 2);
-        }
-        heap[pos] = item;
+    if (heap[1] === undefined)
+      return;
+
+    const size = --this.size;
+    const item = heap[1];
+    heap[1] = heap[size + 1];
+    heap[size + 1] = undefined;
+    this.percolateDown();
+    return item;
+  }
+
+  percolateDown() {
+    const heap = this.heap;
+    const size = this.size;
+    const comparator = this.comparator;
+
+    const item = heap[1];
+    let index = 1;
+
+    while (index * 2 <= size) {
+      let childIndex = index * 2 + 1;
+      if (childIndex > size || comparator(heap[index * 2], heap[childIndex]) < 0)
+        childIndex = index * 2;
+
+      const child = heap[childIndex];
+      if (comparator(item, child) <= 0)
+        break;
+
+      heap[index] = child;
+      index = childIndex;
     }
 
-    shift() {
-        const heap = this.heap;
-        const value = heap[1];
+    heap[index] = item;
+  }
 
-        if (value === undefined)
-            return;
-
-        const size = --this.size;
-
-        heap[1] = heap[size + 1];
-        heap[size + 1] = undefined;
-        this.percolateDown();
-        return value;
-    }
-
-    percolateDown() {
-        const heap = this.heap;
-        const size = this.size;
-        const comparator = this.comparator;
-
-        let pos = 1;
-        const item = heap[pos];
-
-        while (pos * 2 <= size) {
-            let childIndex = pos * 2 + 1;
-            if (childIndex > size || comparator(heap[pos * 2], heap[childIndex]) < 0)
-                childIndex = pos * 2;
-            const child = heap[childIndex];
-            if (comparator(item, child) <= 0)
-                break;
-            heap[pos] = child;
-            pos = childIndex;
-        }
-        heap[pos] = item;
-    }
+  isEmpty() {
+    return this.size === 0;
+  }
 }
 
-const solve = () => {
-    const lr = new LineReader();
-    const [N, M, K] = lr.readIntArray();
-    const graph = Array.from({ length: N + 1 }, () => []);
-    const distance = Array.from({ length: N + 1 }, () => Array(K).fill(Infinity));
-    const pq = new PriorityQueue((a, b) => a[0] - b[0]);
+function solve() {
+  const [N, M, K] = reader.readIntArray();
+  const graph = Array.from({ length: N + 1 }, () => []);
 
-    for (let i = 0; i < M; i++) {
-        const [u, v, w] = lr.readIntArray();
-        graph[u].push([v, w]);
+  for (let i = 0; i < M; i++) {
+    const [u, v, weight] = reader.readIntArray();
+    graph[u].push([v, weight]);
+  }
+
+  const pq = new PriorityQueue((a, b) => a[1] - b[1]);
+  const distance = Array.from({ length: N + 1 }, () => new Array(K).fill(Infinity));
+  
+  distance[1][0] = 0;
+  pq.push([1, 0])
+  
+  while (!pq.isEmpty()) {
+    const [now, nowWeight] = pq.shift();
+
+    for (const [next, nextWeight] of graph[now]) {
+      const newWeight = nowWeight + nextWeight;
+      if (distance[next][K - 1] > newWeight) {
+        distance[next][K - 1] = newWeight;
+        distance[next].sort((a, b) => a - b);
+        pq.push([next, newWeight]);
+      }
     }
-    
-    distance[1][0] = 0;
-    pq.push([distance[1][0], 1]);
+  }
 
-    while (pq.size > 0) {
-        const [nowDistance, now] = pq.shift();
-        for (const [next, weight] of graph[now]) {
-            const newDistance = nowDistance + weight;
-            if (distance[next][K - 1] > newDistance) {
-                distance[next][K - 1] = newDistance;
-                distance[next].sort((a, b) => a - b);
-                pq.push([newDistance, next]);
-            }
-        }
-    }
-
-    let answer = "";
-
-    for (let i = 1; i < N + 1; i++) {
-        answer += `${distance[i][K - 1] === Infinity ? -1 : distance[i][K - 1]}\n`;
-    }
-
-    return answer;
+  return distance
+    .slice(1)
+    .map((arr) => arr[K - 1] === Infinity ? -1 : arr[K - 1])
+    .join("\n");
 };
 
 console.log(solve());
