@@ -1,48 +1,53 @@
-'use strict'
-
 const fs = require("fs");
 
-const input = fs.readFileSync(process.platform === "linux" ? "/dev/stdin" : "input").toString().split("\n");
+const reader = {
+  data: fs
+    .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
+    .toString()
+    .trim()
+    .split("\n"),
 
-const [n, m] = input.shift().split(" ").map((x) => parseInt(x));
-const edges = input.map((x) => x.split(" ").map((y) => parseInt(y)));
+  cursor: 0,
 
-function solution(n, m, edges) {
-    const distance = Array.from({length: n + 1}, () => Infinity)
-    distance[1] = 0
-    
-    for (let i = 0; i < n - 1; i++) {
-        for (let j = 0; j < m; j++) {
-            const [start, end, weight] = edges[j];
-            const isVisited = distance[start] !== Infinity;
-            if (isVisited && distance[start] + weight < distance[end]) {
-                distance[end] = distance[start] + weight
-            }
-        }
-    }
+  read() {
+    return this.data[this.cursor++];
+  },
 
-    let isCycle = false
-    for (let j = 0; j < m; j++) {
-        const [start, end, weight] = edges[j];
-        const isVisited = distance[start] !== Infinity;
-        if (isVisited && distance[start] + weight < distance[end]) {
-            isCycle = true
-            break     
-        }
-    }
-
-    let answer = "";
-
-    if (isCycle) {
-        answer += "-1\n"
-    } else {
-        for (let i = 2; i < n + 1; i++) {
-            answer += `${distance[i] === Infinity ? -1 : distance[i]}\n`;
-        }
-    }
-
-    return answer;
+  readIntArray() {
+    return this.read().split(" ").map(s => parseInt(s));
+  }
 }
 
-const answer = solution(n, m, edges);
-console.log(answer);
+function solve() {
+  const [N, M] = reader.readIntArray();
+
+  const edges = new Array(M).fill(null);
+
+  for (let i = 0; i < M; i++) {
+    edges[i] = reader.readIntArray();
+  }
+
+  const distance = new Array(N + 1).fill(Infinity);
+  distance[1] = 0;
+
+  for (let i = 0; i < N - 1; i++) {
+    for (const [start, end, weight] of edges) {
+      if (distance[end] > distance[start] + weight) {
+        distance[end] = distance[start] + weight;
+      }
+    }
+  }
+
+  for (const [start, end, weight] of edges) {
+    if (distance[end] > distance[start] + weight) {
+      return -1;
+    }
+  }
+
+  return distance
+    .slice(2)
+    .map(value => value === Infinity ? -1 : value)
+    .join("\n");
+}
+
+console.log(solve());
