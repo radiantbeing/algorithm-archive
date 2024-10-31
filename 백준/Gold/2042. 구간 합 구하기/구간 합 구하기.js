@@ -1,81 +1,94 @@
 const fs = require("fs");
 
-class Reader {
-  data = fs
+const reader = {
+  data: fs
     .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
     .toString()
     .trim()
-    .split("\n");
-
-  cursor = 0;
+    .split("\n"),
+  
+  cursor: 0,
 
   read() {
     return this.data[this.cursor++];
-  }
+  },
+
+  readStrArray() {
+    return this.read().split(" ");
+  },
+
+  readIntArray() {
+    return this.readStrArray().map(s => parseInt(s));
+  },
 
   readBigInt() {
     return BigInt(this.read());
-  }
+  },
 
-  readArray() {
-    return this.read().split(" ");
+  readBigIntArray() {
+    return this.readStrArray().map(s => BigInt(s));
   }
-}
+};
 
 function solve() {
-  const reader = new Reader();
-  const [N, M, K] = reader.readArray().map(Number);
+  const [N, M, K] = reader.readIntArray();
 
-  let treeHeight = 0;
-  while (treeHeight < Math.log2(N)) {
-    treeHeight++;
+  const treeHeight = Math.ceil(Math.log2(N));
+  const treeSize = 2 ** (treeHeight + 1);
+  const tree = new Array(treeSize).fill(0n);
+
+  for (let i = 0; i < N; i++) {
+    const index = 2 ** treeHeight + i;
+    tree[index] = reader.readBigInt();
   }
 
-  const tree = new Array(2 ** treeHeight * 2).fill(BigInt(0));
-  for (let i = 2 ** treeHeight; i < 2 ** treeHeight + N; i++) {
-    tree[i] = reader.readBigInt();
-  }
-
-  for (let i = 2 ** treeHeight - 1; i >= 1; i--) {
+  for (let i = 2 ** treeHeight - 1; i > 0; i--) {
     tree[i] = tree[i * 2] + tree[i * 2 + 1];
   }
 
-  const answer = [];
-  
+  const query = (startIndex, endIndex) => {
+    startIndex = 2 ** treeHeight + startIndex - 1;
+    endIndex = 2 ** treeHeight + endIndex - 1;
+
+    let accumulator = 0n;
+    
+    while (startIndex <= endIndex) {
+      if (startIndex % 2 === 1)
+        accumulator += tree[startIndex];
+      if (endIndex % 2 === 0)
+        accumulator += tree[endIndex];
+      startIndex = Math.floor((startIndex + 1) / 2);
+      endIndex = Math.floor((endIndex - 1) / 2);
+    }
+
+    return accumulator;
+  };
+
+  const update = (index, value) => {
+    index = (2 ** treeHeight) + index - 1;
+    const diff = value - tree[index];
+
+    while (index > 0) {
+      tree[index] += diff;
+      index = Math.floor(index / 2);
+    }
+  };
+
+  let answer = "";
+
   for (let i = 0; i < M + K; i++) {
-    let [type, u, v] = reader.readArray();
+    const [a, b, c] = reader.readStrArray();
 
-    if (type === "1") {
-      let index = 2 ** treeHeight + Number(u) - 1;
-      let value = BigInt(v);
-      
-      const diff = value - tree[index];
-      
-      while (index >= 1) {
-        tree[index] += diff;
-        index = Math.floor(index / 2);
-      }
-    } else if (type === "2") {
-      let startIndex = 2 ** treeHeight + Number(u) - 1;
-      let endIndex = 2 ** treeHeight + Number(v) - 1;
-      
-      let prefixSum = BigInt(0);
-
-      while (startIndex <= endIndex) {
-        if (startIndex % 2 === 1)
-          prefixSum += tree[startIndex];
-        if (endIndex % 2 === 0)
-          prefixSum += tree[endIndex]
-
-        startIndex = Math.floor((startIndex + 1) / 2);
-        endIndex = Math.floor((endIndex - 1) / 2);
-      }
-      
-      answer.push(prefixSum);
+    if (a === "1") {
+      update(parseInt(b), BigInt(c));
+    }
+    
+    if (a === "2") {
+      answer += query(parseInt(b), parseInt(c)) + "\n";
     }
   }
 
-  return answer.join("\n");
+  return answer;
 }
 
 console.log(solve());
