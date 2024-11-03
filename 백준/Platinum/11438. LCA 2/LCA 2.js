@@ -34,7 +34,7 @@ function solve() {
 
   let kMax = 0;
 
-  while (2 ** kMax <= N) {
+  while (1 << kMax <= N) {
     kMax++;
   }
 
