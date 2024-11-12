@@ -1,61 +1,69 @@
 const fs = require("fs");
 
-const data = fs
-  .readFileSync(
-    process.platform === "linux" ? 0 : "input.txt",
-    "utf-8"
-  )
-  .toString()
-  .trim()
-  .split("\n");
+const reader = {
+    data: fs
+        .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
+        .toString()
+        .trim()
+        .split("\n"),
+    
+    cursor: 0,
 
-const solve = () => {
-  const N = Number(data[0]);
-  const [problem, ...rest] = data[1].split(" ");
-  const factorial = Array(N + 1).fill(BigInt(1));
-  const isVisited = Array(N + 1).fill(false);
-  const sequence = Array(N + 1);
+    read() {
+        return this.data[this.cursor++];
+    },
 
-  for (let i = 1; i < N + 1; i++) {
-    factorial[i] = factorial[i - 1] * BigInt(i);
+    readInt() {
+        return parseInt(this.read());
+    },
+
+    readStrArray() {
+        return this.read().split(" ");
+    }
+};
+
+function solve() {
+  const N = reader.readInt();
+  const query = reader.readStrArray();
+  const factorial = new Array(N + 1).fill(1n);
+  const sequence = new Array(N + 1);
+  const visited = new Array(N + 1).fill(false);
+
+  for (let i = 1; i <= N; i++) {
+    factorial[i] = BigInt(i) * factorial[i - 1];
   }
-  
-  let answer;
 
-  if (problem === "1") {
-    let K = BigInt(rest[0]);
-    for (let i = 1; i < N + 1; i++) {
-      let count = BigInt(1);
-      for (let j = 1; j < N + 1; j++) {
-        if (isVisited[j]) {
-          continue;
-        }
+  if (query[0] === "1") {
+    let K = BigInt(query[1]);
+    for (let i = 1; i <= N; i++) {
+      let count = 1n;
+      for (let j = 1; j <= N; j++) {
+        if (visited[j]) continue;
         if (K <= factorial[N - i] * count) {
-          K -= factorial[N - i] * (count - BigInt(1));
+          K -= factorial[N - i] * (count - 1n);
           sequence[i] = j;
-          isVisited[j] = true;
+          visited[j] = true;
           break;
         }
         count++;
       }
     }
-    answer = sequence.slice(1).join(" ");
-  } else if (problem === "2") {
-    const permutation = rest.map(BigInt);
-    let K = BigInt(1);
-    for (let i = 1; i < N + 1; i++) {
-      let count = BigInt(0);
-      for (let j = 1; j < permutation[i - 1]; j++) {
-        if (!isVisited[j]) {
-          count++;
-        }
+
+    return sequence.slice(1).join(" ");
+  } else if (query[0] === "2") {
+    let K = 1n;
+
+    for (let i = 1; i <= N; i++) {
+      let count = 0n;
+      for (let j = 1; j < BigInt(query[i]); j++) {
+        if (!visited[j]) count++;
       }
       K += factorial[N - i] * count;
-      isVisited[permutation[i - 1]] = true;
+      visited[BigInt(query[i])] = true;
     }
-    answer = K.toString();
+
+    return K.toString();
   }
-  return answer;
-};
+}
 
 console.log(solve());
