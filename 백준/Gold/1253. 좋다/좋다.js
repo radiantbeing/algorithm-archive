@@ -1,60 +1,62 @@
 const fs = require("fs");
 
-const inputReader = new class InputReader {
-  data = fs
-    .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
-    .toString()
-    .trim()
-    .split("\n");
-  
-  cursor = 0;
+const reader = {
+    lines: fs
+        .readFileSync(0, "utf-8")
+        .split("\n"),
+    
+    cursor: 0,
 
-  read() {
-    return this.data[this.cursor++];
-  }
+    readLine() {
+        return this.lines[this.cursor++];
+    },
 
-  readInt() {
-    return parseInt(this.read());
-  }
+    readInt() {
+        return parseInt(this.readLine());
+    },
 
-  readIntArray() {
-    return this
-      .read()
-      .split(" ")
-      .map(char => parseInt(char));
-  }
-}
+    readIntArray() {
+        return this.readLine().split(" ").map(token => parseInt(token));
+    }
+};
 
 function solve() {
-  const N = inputReader.readInt();
-  const numbers = inputReader.readIntArray();
+    const N = reader.readInt();
+    const numbers = reader.readIntArray();
 
-  let answer = 0;
+    numbers.sort((a, b) => a - b);
 
-  numbers.sort((a, b) => a - b);
+    let count = 0;
+    
+    for (let i = 0; i < N; i++) {
+        const target = numbers[i];
 
-  for (let targetIndex = 0; targetIndex < N; targetIndex++) {
-    const targetValue = numbers[targetIndex];
+        let left = 0;
+        let right = N - 1;
 
-    let startIndex = 0;
-    let endIndex = N - 1;
+        while (left < right) {
+            if (i === left) {
+                left++;
+                continue;
+            }
+            if (i === right) {
+                right--;
+                continue;
+            }
 
-    while (startIndex < endIndex) {
-      const startValue = numbers[startIndex];
-      const endValue = numbers[endIndex];
-
-      if (startIndex === targetIndex || targetValue > startValue + endValue) {
-        startIndex++;
-      } else if (endIndex === targetIndex || targetValue < startValue + endValue) {
-        endIndex--;
-      } else {
-        answer++;
-        break;
-      }
+            const sum = numbers[left] + numbers[right];
+            if (sum < target) {
+                left++;
+            } else if (sum > target) {
+                right--;
+            } else {
+                count++;
+                break;
+            }
+        }
     }
-  }
-
-  return answer;
+    
+    return count;
 }
 
 console.log(solve());
