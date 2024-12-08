@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -31,7 +30,13 @@ func main() {
 		numbers[i] = readInt(reader)
 	}
 	
-	sort.Ints(numbers)
+	for i := 0; i < N; i++ {
+		for j:= 0; j < N - i - 1; j++ {
+			if numbers[j] > numbers[j + 1] {
+				numbers[j], numbers[j + 1] = numbers[j + 1], numbers[j]
+			}
+		}
+	}
 
 	for i := 0; i < N; i++{
 		fmt.Fprintln(writer, numbers[i])
