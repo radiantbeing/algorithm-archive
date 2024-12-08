@@ -44,7 +44,7 @@ func main() {
 		queue = append(queue, [2]int{i, numbers[i]})
 		fmt.Fprintf(writer, "%d ", queue[0][1])
 
-		if i % 1000 == 0 {
+		if i % 8000 == 0 {
 			writer.Flush()
 		}
 	}
