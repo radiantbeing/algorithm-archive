@@ -1,41 +1,38 @@
 const fs = require("fs");
 
-const inputReader = new class InputReader {
-  data = fs
-    .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
-    .toString()
-    .split("\n");
-  
-  cursor = 0;
+const reader = {
+  lines: fs
+    .readFileSync(process.platform === "linux" ? 0 : "stdin.txt", "utf-8")
+    .split("\n"),
+
+  cursor: 0,
 
   read() {
-    return this.data[this.cursor++];
-  }
+    return this.lines[this.cursor++];
+  },
 
-  readIntArray() {
-    return this
-      .read()
-      .split(" ")
-      .map(s => parseInt(s));
+  readIntegers() {
+    return this.read().split(" ").map(element => parseInt(element));
   }
-}
+};
 
 function solve() {
-  const [numberCount, queryCount] = inputReader.readIntArray();
-  const numbers = [0, ...inputReader.readIntArray()];
+  const [N, M] = reader.readIntegers();
+  const numbers = [0, ...reader.readIntegers()];
+  const prefix_sums = Array(N + 1).fill(0);
+  const answer = Array(M);
 
-  const prefixSum = new Array(numberCount + 1).fill(0);
-  for (let i = 1; i <= numberCount; i++) {
-    prefixSum[i] = prefixSum[i - 1] + numbers[i];
+  for (let i = 1; i <= N; i++) {
+    prefix_sums[i] = prefix_sums[i - 1] + numbers[i];
   }
 
-  const answers = [];
-  for (let i = 0; i < queryCount; i++) {
-    const [start, end] = inputReader.readIntArray();
-    answers.push(prefixSum[end] - prefixSum[start - 1]);
+  for (let i = 0; i < M; i++) {
+    const [start_nr, end_nr] = reader.readIntegers();
+    const range_sum = prefix_sums[end_nr] - prefix_sums[start_nr - 1];
+    answer[i] = range_sum;
   }
 
-  return answers.join("\n");
+  return answer.join("\n");
 }
 
 console.log(solve());
