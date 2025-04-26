@@ -1,66 +1,121 @@
 const fs = require("fs");
 
-class LineReader {
-    data = fs
-        .readFileSync(
-            process.platform === "linux" ? 0 : "input.txt",
-            "utf-8"
-        )
-        .toString()
-        .trimEnd()
-        .split("\n");
-    cursor = 0;
+class Deque {
+  count = 0;
+  lowestCount = 0;
+  items = {};
 
-    read() {
-        return this.data[this.cursor++];
-    }
+  push(item) {
+    this.items[this.count] = item;
+    this.count++;
+  }
 
-    readIntArray() {
-        return this.read().split(" ").map(Number);
+  unshift(item) {
+    if (this.isEmpty()) {
+      this.push(item);
+    } else if (this.lowestCount > 0) {
+      this.lowestCount--;
+      this.items[this.lowestCount] = item;
+    } else {
+      for (let i = this.count; i > 0; i--) {
+        this.items[i] = this.items[i - 1];
+      }
+      this.count++;
+      this.items[0] = item;
     }
+  }
+
+  pop() {
+    if (this.isEmpty()) {
+      return;
+    }
+    this.count--;
+    const result = this.items[this.count];
+    delete this.items[this.count];
+    return result;
+  }
+
+  shift() {
+    if (this.isEmpty()) {
+      return;
+    }
+    const result = this.items[this.lowestCount];
+    delete this.items[this.lowestCount];
+    this.lowestCount++;
+    return result;
+  }
+
+  peekFront() {
+    if (this.isEmpty()) {
+      return;
+    }
+    return this.items[this.lowestCount];
+  }
+
+  peekBack() {
+    if (this.isEmpty()) {
+      return;
+    }
+    return this.items[this.count - 1];
+  }
+
+  isEmpty() {
+    return this.size() === 0;
+  }
+
+  size() {
+    return this.count - this.lowestCount;
+  }
 }
 
-const solve = () => {
-    const lineReader = new LineReader();
-    
-    let answer = "";
+const inputReader = {
+  data: fs
+    .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
+    .toString()
+    .trim()
+    .split("\n"),
+  
+  cursor: 0,
+  
+  read() {
+    return this.data[this.cursor++];
+  },
 
-    const [N, L] = lineReader.readIntArray();
-    const A = lineReader.readIntArray();
-
-    const deque = [];
-    let front = -1;
-
-    deque.push([A[0], 0]);
-    front++;
-    answer += deque[front][0] + " ";
-
-    for (let i = 1; i < N; i++) {
-        while (
-            deque.length > front &&
-            deque[deque.length - 1][0] > A[i]
-        ) {
-            deque.pop();
-        }
-        
-        deque.push([A[i], i]);
-
-        while (
-            deque[front] && 
-            deque[front][1] < i - L + 1
-        ) {
-            front++;
-        }
-
-        answer += deque[front][0] + " ";
-
-        if (i % 10000 === 0) {
-            process.stdout.write(answer);
-            answer = "";
-        }
-    }
-
-    return answer;
+  readIntArray() {
+    return this
+      .read()
+      .split(" ")
+      .map(s => parseInt(s));
+  }
 };
 
-process.stdout.write(solve());
+function solve() {
+  const [N, L] = inputReader.readIntArray();
+  const numbers = inputReader.readIntArray();
+
+  const deque = new Deque();
+  let answers = [];
+
+  numbers.forEach((value, index) => {
+    while (deque.size() > 0 && deque.peekBack()[1] >= value) {
+      deque.pop();
+    }
+
+    deque.push([index, value]);
+
+    if (deque.peekFront()[0] <= index - L) {
+      deque.shift();
+    }
+
+    answers.push(deque.peekFront()[1]);
+
+    if (answers.length === 10_000) {
+      process.stdout.write(answers.join(" ") + " ");
+      answers = [];
+    }
+  });
+
+  process.stdout.write(answers.join(" "));
+}
+
+solve();
