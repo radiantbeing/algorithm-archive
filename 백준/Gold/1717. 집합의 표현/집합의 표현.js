@@ -1,54 +1,55 @@
 const fs = require("fs");
 
-const reader = {
-  data: fs
+const reader = (function () {
+  const lines = fs
     .readFileSync(process.platform === "linux" ? 0 : "input.txt", "utf-8")
-    .toString()
-    .trim()
-    .split("\n"),
+    .split("\n");
 
-  cursor: 0,
+  let cursor = 0;
 
-  read() {
-    return this.data[this.cursor++];
-  },
-
-  readIntArray() {
-    return this.read().split(" ").map(s => parseInt(s));
+  function get_line() {
+    return lines[cursor++];
   }
-}
+
+  function get_integers() {
+    return get_line()
+      .split(" ")
+      .map((token) => parseInt(token));
+  }
+
+  return Object.freeze({
+    get_integers,
+  });
+})();
 
 function solve() {
-  const [n, m] = reader.readIntArray();
-  
-  const parent = Array.from({ length: n + 1 }, (_, i) => i);
-  
-  const find = (vertex) => {
-    if (vertex === parent[vertex])
-      return vertex;
+  const [N, M] = reader.get_integers();
+  const parents = Array.from({ length: N + 1 }, (_, i) => i);
+  const answers = [];
 
-    parent[vertex] = find(parent[vertex]);
-    return parent[vertex];
-  };
+  function union(u, v) {
+    const parent_u = find(u);
+    const parent_v = find(v);
+    parents[parent_u] = parent_v;
+  }
 
-  const union = (vertex1, vertex2) => {
-    parent[find(vertex1)] = find(vertex2);
-  };
-
-  const answer = [];
-
-  for (let i = 0; i < m; i++) {
-    const [type, vertex1, vertex2] = reader.readIntArray();
-    if (type === 0) {
-      union(vertex1, vertex2);
+  function find(v) {
+    if (v !== parents[v]) {
+      parents[v] = find(parents[v]);
     }
-    if (type === 1) {
-      const inSameSet = find(vertex1) === find(vertex2);
-      answer.push(inSameSet ? "YES" : "NO");
+    return parents[v];
+  }
+
+  for (let i = 0; i < M; i++) {
+    const [operation, u, v] = reader.get_integers();
+    if (operation === 0) {
+      union(u, v);
+    } else if (operation === 1) {
+      answers.push(find(u) === find(v) ? "YES" : "NO");
     }
   }
 
-  return answer.join("\n");
+  return answers.join("\n");
 }
 
 console.log(solve());
