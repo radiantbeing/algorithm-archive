@@ -10,11 +10,14 @@ const reader = fs
 function solve() {
     const number = Number.parseInt(reader);
 
-    function factorial(n) {
+    function factorial(n, result = 1) {
+
+        // 꼬리 호출을 적용하였다.
+
         if (n < 2) {
-            return 1;
+            return result;
         }
-        return n * factorial(n - 1);
+        return factorial(n - 1, n * result);
     }
 
     return factorial(number);
