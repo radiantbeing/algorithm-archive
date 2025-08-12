@@ -1,62 +1,39 @@
 const fs = require("fs");
 
-const reader = {
-    lines: fs
-        .readFileSync(0, "utf-8")
-        .split("\n"),
+const data = fs
+    .readFileSync(
+        process.platform === "linux" ? 0 : "input.txt", 
+        "utf-8"
+    )
+    .toString()
+    .split("\n");
+
+const solve = () => {
+    let answer = 0;
     
-    cursor: 0,
+    const N = data[0];
+    const A = data[1].split(" ").map(Number);
 
-    readLine() {
-        return this.lines[this.cursor++];
-    },
+    A.sort((a, b) => a - b);
 
-    readInt() {
-        return parseInt(this.readLine());
-    },
-
-    readIntArray() {
-        return this.readLine().split(" ").map(token => parseInt(token));
-    }
-};
-
-function solve() {
-    const N = reader.readInt();
-    const numbers = reader.readIntArray();
-
-    numbers.sort((a, b) => a - b);
-
-    let count = 0;
-    
     for (let i = 0; i < N; i++) {
-        const target = numbers[i];
-
-        let left = 0;
-        let right = N - 1;
-
-        while (left < right) {
-            if (i === left) {
-                left++;
-                continue;
-            }
-            if (i === right) {
-                right--;
-                continue;
-            }
-
-            const sum = numbers[left] + numbers[right];
-            if (sum < target) {
-                left++;
-            } else if (sum > target) {
-                right--;
-            } else {
-                count++;
+        let startIndex = 0,
+            endIndex = N - 1;
+        while (startIndex < endIndex) {
+            const now = A[i];
+            const sum = A[startIndex] + A[endIndex];
+            if (now > sum || i === startIndex)
+                startIndex++;
+            else if (now < sum || i === endIndex)
+                endIndex--;
+            else {
+                answer++;
                 break;
             }
         }
     }
-    
-    return count;
-}
+
+    return answer;
+};
 
 console.log(solve());
