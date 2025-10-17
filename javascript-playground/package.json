@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "start": "node --stack-size=65536 index.js < input.txt"
+  },
+  "volta": {
+    "node": "16.13.1"
+  }
+}
